@@ -2,24 +2,21 @@ name: Alerta Plan de Trabajo SST
 
 on:
   schedule:
-    # Día 15 y último día de cada mes a las 7:00 AM Colombia
     - cron: "0 12 15 * *"
     - cron: "0 12 28-31 * *"
 
   workflow_dispatch:
 
 jobs:
-  ejecutar-alerta:
+  alerta:
 
     runs-on: ubuntu-latest
 
     steps:
 
-      - name: Descargar repositorio
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Configurar Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
@@ -32,5 +29,5 @@ jobs:
         env:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-        run: |
-          python alerta_plan_trabajo.py
+          EXCEL_URL: ${{ secrets.EXCEL_URL }}
+        run: python alerta_plan_trabajo.py
