@@ -15,7 +15,7 @@ from email.mime.text import MIMEText
 # CONFIGURACIÓN
 # ==========================
 
-EXCEL_URL = "https://valserindustriales-my.sharepoint.com/:x:/p/tecnicodeservicios/IQCQVdRLOnqXTolHkf6rqgNzAU0sWBihplDqt4zCfrm16IA?e=GEgKMd"
+EXCEL_URL = "https://valserindustriales-my.sharepoint.com/:x:/p/tecnicodeservicios/IQCQVdRLOnqXTolHkf6rqgNzAU0sWBihplDqt4zCfrm16IA?e=GEgKMd&download=1"
 
 HOJA = 0
 DIAS_AVISO = 45
