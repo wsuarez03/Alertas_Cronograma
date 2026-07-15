@@ -64,6 +64,8 @@ def main():
         engine="openpyxl"
     )
 
+    print(df.iloc[:15, :40])
+    print(df.shape)
     hoy = datetime.now().date()
 
     criticas = []
