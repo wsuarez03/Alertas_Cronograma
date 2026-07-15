@@ -26,7 +26,19 @@ COL_ALERTA=34
 FILA_INICIO=11
 
 def descargar():
-    return requests.get(EXCEL_URL).content
+    r = requests.get(EXCEL_URL, allow_redirects=True)
+
+    print("Status:", r.status_code)
+    print("Content-Type:", r.headers.get("Content-Type"))
+
+    if r.status_code != 200:
+        raise Exception(f"Error descargando archivo: {r.status_code}")
+
+    # Guardar temporalmente para depuración
+    with open("debug_descarga.bin", "wb") as f:
+        f.write(r.content)
+
+    return r.content
 
 def html(df):
     if df.empty:return "<p>No hay registros.</p>"
@@ -43,7 +55,12 @@ def enviar(htmltxt):
     s.sendmail(SMTP_USER,CORREOS_DESTINO,m.as_string()); s.quit()
 
 def main():
-    df=pd.read_excel(io.BytesIO(descargar()),sheet_name=HOJA,header=None)
+        df = pd.read_excel(
+        io.BytesIO(descargar()),
+        sheet_name=HOJA,
+        header=None,
+        engine="openpyxl"
+    )
     hoy=datetime.now().date()
     criticas=[]; pendientes=[]; proximas=[]
     for i in range(FILA_INICIO,len(df)):
