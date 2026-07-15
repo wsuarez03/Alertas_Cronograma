@@ -58,21 +58,30 @@ FILA_INICIO = 11
 
 def descargar():
 
-    print("Descargando Excel...")
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/138.0.0.0 Safari/537.36"
+        )
+    }
 
-    r = requests.get(EXCEL_URL, allow_redirects=True)
+    r = requests.get(
+        EXCEL_URL,
+        headers=headers,
+        allow_redirects=True,
+        timeout=60
+    )
 
     print("Status:", r.status_code)
+    print("URL final:", r.url)
     print("Content-Type:", r.headers.get("Content-Type"))
+    print("Primeros 300 bytes:")
+    print(r.text[:300])
 
-    if r.status_code != 200:
-        raise Exception(f"No fue posible descargar el archivo ({r.status_code})")
-
-    print("Bytes descargados:", len(r.content))
+    r.raise_for_status()
 
     return r.content
-
-
 # ==========================
 # HTML
 # ==========================
