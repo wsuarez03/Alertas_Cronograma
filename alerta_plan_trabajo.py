@@ -5,7 +5,7 @@ import pandas as pd
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-EXCEL_URL="PEGAR_URL_ONEDRIVE"
+EXCEL_URL="https://valserindustriales-my.sharepoint.com/personal/sst_valserindustriales_com/_layouts/15/download.aspx?UniqueId=784bcf21%2Db2d1%2D421b%2Db39d%2De234d459d720"
 HOJA=0
 DIAS_AVISO=45
 SMTP_SERVER="smtp.gmail.com"
