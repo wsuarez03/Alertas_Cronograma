@@ -1,63 +1,142 @@
 # alerta_plan_trabajo.py
-import io, os, requests, smtplib
-from datetime import datetime
+
+import io
+import os
+import smtplib
+import requests
+import traceback
 import pandas as pd
+
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-EXCEL_URL="https://valserindustriales-my.sharepoint.com/personal/tecnicodeservicios_valserindustriales_com/_layouts/15/download.aspx?UniqueId=4bd45590%2D7a3a%2D4e97%2D8947%2D91feabaa0373"
-HOJA=0
-DIAS_AVISO=45
-SMTP_SERVER="smtp.gmail.com"
-SMTP_PORT=587
-SMTP_USER=os.getenv("SMTP_USER")
-SMTP_PASS=os.getenv("SMTP_PASS")
-CORREOS_DESTINO=[
-    "asesorcomercial@valserindustriales.com",
-    "tecnicodeservicios@valserindustriales.com"]
+# ==========================
+# CONFIGURACIÓN
+# ==========================
 
-MESES={
-1:("ENE",5,6),2:("FEB",7,8),3:("MAR",9,10),4:("ABR",11,12),
-5:("MAY",13,14),6:("JUN",15,16),7:("JUL",17,18),8:("AGO",19,20),
-9:("SEP",21,22),10:("OCT",23,24),11:("NOV",25,26),12:("DIC",27,28)
+EXCEL_URL = "https://valserindustriales-my.sharepoint.com/personal/tecnicodeservicios_valserindustriales_com/_layouts/15/download.aspx?UniqueId=4bd45590%2D7a3a%2D4e97%2D8947%2D91feabaa0373"
+
+HOJA = 0
+DIAS_AVISO = 45
+
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+SMTP_USER = os.getenv("SMTP_USER")
+SMTP_PASS = os.getenv("SMTP_PASS")
+
+CORREOS_DESTINO = [
+    "asesorcomercial@valserindustriales.com",
+    "tecnicodeservicios@valserindustriales.com"
+]
+
+MESES = {
+    1: ("ENE", 5, 6),
+    2: ("FEB", 7, 8),
+    3: ("MAR", 9, 10),
+    4: ("ABR", 11, 12),
+    5: ("MAY", 13, 14),
+    6: ("JUN", 15, 16),
+    7: ("JUL", 17, 18),
+    8: ("AGO", 19, 20),
+    9: ("SEP", 21, 22),
+    10: ("OCT", 23, 24),
+    11: ("NOV", 25, 26),
+    12: ("DIC", 27, 28)
 }
-COL_ACTIVIDAD=2
-COL_PERIODICIDAD=4
-COL_RESPONSABLE=29
-COL_ALERTA=34
-FILA_INICIO=11
+
+COL_ACTIVIDAD = 2
+COL_PERIODICIDAD = 4
+COL_RESPONSABLE = 29
+COL_ALERTA = 34
+FILA_INICIO = 11
+
+
+# ==========================
+# DESCARGAR EXCEL
+# ==========================
 
 def descargar():
+
+    print("Descargando Excel...")
+
     r = requests.get(EXCEL_URL, allow_redirects=True)
 
     print("Status:", r.status_code)
     print("Content-Type:", r.headers.get("Content-Type"))
 
     if r.status_code != 200:
-        raise Exception(f"Error descargando archivo: {r.status_code}")
+        raise Exception(f"No fue posible descargar el archivo ({r.status_code})")
 
-    # Guardar temporalmente para depuración
-    with open("debug_descarga.bin", "wb") as f:
-        f.write(r.content)
+    print("Bytes descargados:", len(r.content))
 
     return r.content
 
-def html(df):
-    if df.empty:return "<p>No hay registros.</p>"
-    return df.to_html(index=False)
 
-def enviar(htmltxt):
-    m=MIMEMultipart("alternative")
-    m["Subject"]="Alerta Plan de Trabajo SST"
-    m["From"]=SMTP_USER
-    m["To"]=", ".join(CORREOS_DESTINO)
-    m.attach(MIMEText(htmltxt,"html"))
-    s=smtplib.SMTP(SMTP_SERVER,SMTP_PORT)
-    s.starttls(); s.login(SMTP_USER,SMTP_PASS)
-    s.sendmail(SMTP_USER,CORREOS_DESTINO,m.as_string()); s.quit()
+# ==========================
+# HTML
+# ==========================
+
+def tabla_html(df):
+
+    if df.empty:
+        return "<p>No hay registros.</p>"
+
+    return df.to_html(index=False, border=1)
+
+
+# ==========================
+# ENVIAR CORREO
+# ==========================
+
+def enviar(html):
+
+    print("Preparando correo...")
+
+    if not SMTP_USER:
+        raise Exception("SMTP_USER no existe.")
+
+    if not SMTP_PASS:
+        raise Exception("SMTP_PASS no existe.")
+
+    mensaje = MIMEMultipart("alternative")
+
+    mensaje["Subject"] = "Alerta Plan de Trabajo SST"
+    mensaje["From"] = SMTP_USER
+    mensaje["To"] = ", ".join(CORREOS_DESTINO)
+
+    mensaje.attach(MIMEText(html, "html"))
+
+    servidor = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+
+    servidor.starttls()
+
+    print("Conectado a Gmail...")
+
+    servidor.login(SMTP_USER, SMTP_PASS)
+
+    print("Login correcto")
+
+    servidor.sendmail(
+        SMTP_USER,
+        CORREOS_DESTINO,
+        mensaje.as_string()
+    )
+
+    servidor.quit()
+
+    print("Correo enviado correctamente.")
+
+
+# ==========================
+# PROGRAMA PRINCIPAL
+# ==========================
 
 def main():
+
     contenido = descargar()
+
+    print("Leyendo Excel...")
 
     df = pd.read_excel(
         io.BytesIO(contenido),
@@ -66,8 +145,9 @@ def main():
         engine="openpyxl"
     )
 
-    print(df.iloc[:15, :40])
-    print(df.shape)
+    print("Filas:", df.shape[0])
+    print("Columnas:", df.shape[1])
+
     hoy = datetime.now().date()
 
     criticas = []
@@ -75,58 +155,89 @@ def main():
     proximas = []
 
     for i in range(FILA_INICIO, len(df)):
+
         if str(df.iat[i, COL_ALERTA]).strip().upper() != "X":
             continue
 
-        act = df.iat[i, COL_ACTIVIDAD]
-        resp = df.iat[i, COL_RESPONSABLE]
-        per = df.iat[i, COL_PERIODICIDAD]
+        actividad = df.iat[i, COL_ACTIVIDAD]
+        responsable = df.iat[i, COL_RESPONSABLE]
+        periodicidad = df.iat[i, COL_PERIODICIDAD]
 
-        for mes, (nom, p, e) in MESES.items():
+        for mes, (nombre, col_programada, col_ejecutada) in MESES.items():
 
-            if str(df.iat[i, p]).strip().upper() != "P":
+            if str(df.iat[i, col_programada]).strip().upper() != "P":
                 continue
 
-            if str(df.iat[i, e]).strip() != "":
+            if str(df.iat[i, col_ejecutada]).strip() != "":
                 continue
 
             fecha = datetime(hoy.year, mes, 1).date()
+
             dias = (fecha - hoy).days
 
-            reg = {
-                "Actividad": act,
-                "Responsable": resp,
-                "Periodicidad": per,
-                "Mes": nom
+            registro = {
+                "Actividad": actividad,
+                "Responsable": responsable,
+                "Periodicidad": periodicidad,
+                "Mes": nombre
             }
 
             if dias < -30:
-                reg["Estado"] = f"Crítica ({abs(dias)} días atraso)"
-                criticas.append(reg)
+                registro["Estado"] = f"Crítica ({abs(dias)} días)"
+                criticas.append(registro)
 
             elif dias < 0:
-                reg["Estado"] = f"Pendiente ({abs(dias)} días atraso)"
-                pendientes.append(reg)
+                registro["Estado"] = f"Pendiente ({abs(dias)} días)"
+                pendientes.append(registro)
 
             elif dias <= DIAS_AVISO:
-                reg["Estado"] = f"Próxima ({dias} días)"
-                proximas.append(reg)
+                registro["Estado"] = f"Próxima ({dias} días)"
+                proximas.append(registro)
+
+    print("Críticas:", len(criticas))
+    print("Pendientes:", len(pendientes))
+    print("Próximas:", len(proximas))
 
     if not (criticas or pendientes or proximas):
-        print("Sin alertas")
+        print("No existen actividades para notificar.")
         return
 
-    htmlmsg = f"""
-    <h2>Plan Trabajo SST</h2>
+    html = f"""
+    <h2>Plan de Trabajo SST</h2>
 
     <h3>🔴 Críticas</h3>
-    {html(pd.DataFrame(criticas))}
+    {tabla_html(pd.DataFrame(criticas))}
 
     <h3>🟠 Pendientes</h3>
-    {html(pd.DataFrame(pendientes))}
+    {tabla_html(pd.DataFrame(pendientes))}
 
     <h3>🟡 Próximas</h3>
-    {html(pd.DataFrame(proximas))}
+    {tabla_html(pd.DataFrame(proximas))}
     """
 
-    enviar(htmlmsg)
+    enviar(html)
+
+
+# ==========================
+# INICIO
+# ==========================
+
+if __name__ == "__main__":
+
+    try:
+
+        print("====================================")
+        print("INICIANDO ALERTA PLAN DE TRABAJO SST")
+        print("====================================")
+
+        main()
+
+        print("Proceso terminado correctamente.")
+
+    except Exception as e:
+
+        print("ERROR:")
+        print(e)
+        traceback.print_exc()
+
+        raise
