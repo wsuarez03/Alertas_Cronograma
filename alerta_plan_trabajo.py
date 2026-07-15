@@ -12,7 +12,7 @@ SMTP_SERVER="smtp.gmail.com"
 SMTP_PORT=587
 SMTP_USER=os.getenv("SMTP_USER")
 SMTP_PASS=os.getenv("SMTP_PASS")
-CORREOS_DESTINO=["
+CORREOS_DESTINO=[
     "asesorcomercial@valserindustriales.com",
     "tecnicodeservicios@valserindustriales.com"]
 
