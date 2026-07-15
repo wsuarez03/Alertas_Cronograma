@@ -154,6 +154,8 @@ def main():
         engine="openpyxl"
     )
 
+    for i in range(20):
+    print(i, df.iloc[i].tolist())
     print("Filas:", df.shape[0])
     print("Columnas:", df.shape[1])
 
