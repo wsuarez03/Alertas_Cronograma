@@ -12,7 +12,9 @@ SMTP_SERVER="smtp.gmail.com"
 SMTP_PORT=587
 SMTP_USER=os.getenv("SMTP_USER")
 SMTP_PASS=os.getenv("SMTP_PASS")
-CORREOS_DESTINO=["correo@empresa.com"]
+CORREOS_DESTINO=["
+    "asesorcomercial@valserindustriales.com",
+    "tecnicodeservicios@valserindustriales.com"]
 
 MESES={
 1:("ENE",5,6),2:("FEB",7,8),3:("MAR",9,10),4:("ABR",11,12),
