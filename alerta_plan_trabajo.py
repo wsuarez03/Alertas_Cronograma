@@ -168,18 +168,29 @@ def main():
         if str(df.iat[i, COL_ALERTA]).strip().upper() != "X":
             continue
 
-        actividad = df.iat[i, COL_ACTIVIDAD]
-        responsable = df.iat[i, COL_RESPONSABLE]
-        periodicidad = df.iat[i, COL_PERIODICIDAD]
+        for i in range(FILA_INICIO, len(df)):
 
-        for mes, (nombre, col_programada, col_ejecutada) in MESES.items():
+    print(
+        i,
+        df.iat[i, COL_ACTIVIDAD],
+        "| ALERTA:",
+        repr(df.iat[i, COL_ALERTA]),
+    )
 
-            if str(df.iat[i, col_programada]).strip().upper() != "P":
-                continue
+    if str(df.iat[i, COL_ALERTA]).strip().upper() != "X":
+        continue
 
-            if str(df.iat[i, col_ejecutada]).strip() != "":
-                continue
+    print("Fila con alerta:", i)
 
+    for mes, (nom, p, e) in MESES.items():
+
+        print(
+            nom,
+            "Plan:",
+            repr(df.iat[i, p]),
+            "Ejecutado:",
+            repr(df.iat[i, e]),
+        )
             fecha = datetime(hoy.year, mes, 1).date()
 
             dias = (fecha - hoy).days
