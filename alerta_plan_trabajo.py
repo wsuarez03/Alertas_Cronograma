@@ -55,34 +55,74 @@ def enviar(htmltxt):
     s.sendmail(SMTP_USER,CORREOS_DESTINO,m.as_string()); s.quit()
 
 def main():
-        df = pd.read_excel(
-        io.BytesIO(descargar()),
+    contenido = descargar()
+
+    df = pd.read_excel(
+        io.BytesIO(contenido),
         sheet_name=HOJA,
         header=None,
         engine="openpyxl"
     )
-    hoy=datetime.now().date()
-    criticas=[]; pendientes=[]; proximas=[]
-    for i in range(FILA_INICIO,len(df)):
-        if str(df.iat[i,COL_ALERTA]).strip().upper()!="X": continue
-        act=df.iat[i,COL_ACTIVIDAD]
-        resp=df.iat[i,COL_RESPONSABLE]
-        per=df.iat[i,COL_PERIODICIDAD]
-        for mes,(nom,p,e) in MESES.items():
-            if str(df.iat[i,p]).strip().upper()!="P": continue
-            if str(df.iat[i,e]).strip()!="": continue
-            fecha=datetime(hoy.year,mes,1).date()
-            dias=(fecha-hoy).days
-            reg={"Actividad":act,"Responsable":resp,"Periodicidad":per,"Mes":nom}
-            if dias< -30:
-                reg["Estado"]=f"Crítica ({abs(dias)} días atraso)"; criticas.append(reg)
-            elif dias<0:
-                reg["Estado"]=f"Pendiente ({abs(dias)} días atraso)"; pendientes.append(reg)
-            elif dias<=DIAS_AVISO:
-                reg["Estado"]=f"Próxima ({dias} días)"; proximas.append(reg)
-    if not(criticas or pendientes or proximas):
-        print("Sin alertas"); return
-    htmlmsg=f"<h2>Plan Trabajo SST</h2><h3>🔴 Críticas</h3>{html(pd.DataFrame(criticas))}<h3>🟠 Pendientes</h3>{html(pd.DataFrame(pendientes))}<h3>🟡 Próximas</h3>{html(pd.DataFrame(proximas))}"
+
+    hoy = datetime.now().date()
+
+    criticas = []
+    pendientes = []
+    proximas = []
+
+    for i in range(FILA_INICIO, len(df)):
+        if str(df.iat[i, COL_ALERTA]).strip().upper() != "X":
+            continue
+
+        act = df.iat[i, COL_ACTIVIDAD]
+        resp = df.iat[i, COL_RESPONSABLE]
+        per = df.iat[i, COL_PERIODICIDAD]
+
+        for mes, (nom, p, e) in MESES.items():
+
+            if str(df.iat[i, p]).strip().upper() != "P":
+                continue
+
+            if str(df.iat[i, e]).strip() != "":
+                continue
+
+            fecha = datetime(hoy.year, mes, 1).date()
+            dias = (fecha - hoy).days
+
+            reg = {
+                "Actividad": act,
+                "Responsable": resp,
+                "Periodicidad": per,
+                "Mes": nom
+            }
+
+            if dias < -30:
+                reg["Estado"] = f"Crítica ({abs(dias)} días atraso)"
+                criticas.append(reg)
+
+            elif dias < 0:
+                reg["Estado"] = f"Pendiente ({abs(dias)} días atraso)"
+                pendientes.append(reg)
+
+            elif dias <= DIAS_AVISO:
+                reg["Estado"] = f"Próxima ({dias} días)"
+                proximas.append(reg)
+
+    if not (criticas or pendientes or proximas):
+        print("Sin alertas")
+        return
+
+    htmlmsg = f"""
+    <h2>Plan Trabajo SST</h2>
+
+    <h3>🔴 Críticas</h3>
+    {html(pd.DataFrame(criticas))}
+
+    <h3>🟠 Pendientes</h3>
+    {html(pd.DataFrame(pendientes))}
+
+    <h3>🟡 Próximas</h3>
+    {html(pd.DataFrame(proximas))}
+    """
+
     enviar(htmlmsg)
-if __name__=="__main__":
-    main()
