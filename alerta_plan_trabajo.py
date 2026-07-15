@@ -154,11 +154,24 @@ def main():
         engine="openpyxl"
     )
 
-    for i in range(20):
-    print(i, df.iloc[i].tolist())
-    print("Filas:", df.shape[0])
-    print("Columnas:", df.shape[1])
+    for i in range(FILA_INICIO, len(df)):
 
+    print("-" * 60)
+
+    print("Fila:", i)
+
+    print("Actividad :", df.iat[i, COL_ACTIVIDAD])
+    print("Alerta    :", repr(df.iat[i, COL_ALERTA]))
+    print("Resp      :", repr(df.iat[i, COL_RESPONSABLE]))
+    print("Periodic. :", repr(df.iat[i, COL_PERIODICIDAD]))
+
+    for mes, (nom, p, e) in MESES.items():
+
+        print(
+            nom,
+            "Plan:", repr(df.iat[i, p]),
+            "Ejecutado:", repr(df.iat[i, e])
+        )
     hoy = datetime.now().date()
 
     criticas = []
